@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoría Móvil Consciente</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #5D4037;
+            --primary-light: #D7CCC8;
+            --accent: #00897B;
+            --accent-light: #B2DFDB;
+            --danger: #D32F2F;
+            --danger-bg: #FFEBEE;
+            --success: #2E7D32;
+            --success-bg: #E8F5E9;
+            --warning: #F57C00;
+            --bg: #F5F5F5;
+            --card-bg: #FFFFFF;
+            --text-main: #263238;
+            --text-muted: #78909C;
+            --border-radius: 12px;
+        }
+
+        body { font-family: 'Nunito Sans', sans-serif; background-color: var(--bg); color: var(--text-main); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        
+        .container { width: 95%; max-width: 1600px; display: grid; gap: 20px; grid-template-columns: 400px 1fr; }
+        .full-width { grid-column: 1 / -1; }
+        
+        .card { background: var(--card-bg); padding: 25px; border-radius: var(--border-radius); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        h1 { color: var(--primary); text-align: center; width: 100%; font-weight: 300; margin-bottom: 30px; }
+        h2 { color: var(--primary); font-size: 1.1rem; margin-top: 0; border-bottom: 2px solid var(--accent-light); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
+
+        /* Controles y Listas */
+        .controls { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        input[type="text"] { flex: 1; padding: 8px 12px; border: 1px solid #CFD8DC; border-radius: 6px; width: 100%; box-sizing: border-box; }
+        select { padding: 8px; border: 1px solid #CFD8DC; border-radius: 6px; background: white; width: 100%; }
+
+        .btn { background-color: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
+        .btn:hover { background-color: #00796B; }
+        .btn-small { padding: 4px 10px; font-size: 0.8rem; background-color: var(--primary-light); color: var(--primary); }
+
+        .scroll-area { max-height: 80vh; overflow-y: auto; border: 1px solid #ECEFF1; border-radius: 8px; }
+        .package-item { padding: 10px 15px; border-bottom: 1px solid #ECEFF1; cursor: pointer; transition: background 0.2s; display: flex; flex-direction: column; }
+        .package-item:hover { background-color: #E0F2F1; }
+        .package-item.active { background-color: var(--accent-light); border-left: 4px solid var(--accent); }
+        
+        .pkg-name { font-weight: 600; color: var(--text-main); word-break: break-all; }
+        .pkg-date { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+        /* --- ESTILOS DE AUDITORÍA --- */
+        .audit-section { margin-bottom: 20px; }
+        .audit-header { font-size: 0.95rem; font-weight: 700; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        
+        .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; font-size: 0.85rem; }
+        .data-box { background: #ECEFF1; padding: 10px; border-radius: 8px; }
+        .data-label { color: var(--text-muted); font-size: 0.75rem; display: block; margin-bottom: 4px; }
+        .data-value { font-family: monospace; color: var(--text-main); font-weight: 600; }
+
+        .tag-container { display: flex; flex-wrap: wrap; gap: 6px; }
+        .tag { padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-family: monospace; border: 1px solid #CFD8DC; background: white; }
+        
+        /* Estilos de Etiquetas */
+        .tag.danger { background-color: var(--danger-bg); color: var(--danger); border-color: var(--danger); font-weight: 600; }
+        .tag.granted { background-color: var(--success-bg); color: var(--success); border-color: #A5D6A7; font-weight: 600; }
+        .tag.danger-granted { background-color: #FFEBEE; color: #D32F2F; border: 2px solid #D32F2F; font-weight: 700; box-shadow: 0 1px 3px rgba(211, 47, 47, 0.2); }
+        .tag.warning { background-color: #FFF3E0; color: #E65100; border-color: #FFCC80; font-weight: 600; }
+
+        /* Estilos para INTENTOS y SCHEMES */
+        .tag.intent-action, .tag.scheme-action, .tag.component-action { 
+            background-color: #E8EAF6; color: #3F51B5; border-color: #C5CAE9; 
+            cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px;
+        }
+        .tag.intent-action:hover, .tag.scheme-action:hover, .tag.component-action:hover { background-color: #C5CAE9; transform: translateY(-1px); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        .tag.intent-action::after { content: "⚡"; font-size: 0.7rem; opacity: 0.5; }
+        
+        /* Estilo específico para schemes con tono azulado de 'conexión' */
+        .tag.scheme-action { background-color: #E3F2FD; color: #0277BD; border-color: #81D4FA; }
+        .tag.scheme-action:hover { background-color: #B3E5FC; }
+        .tag.scheme-action::after { content: "🔗"; font-size: 0.7rem; opacity: 0.5; }
+
+        /* Estilo específico para COMPONENTES (Actividades directas) - Tono Violeta/Místico */
+        .tag.component-action { background-color: #F3E5F5; color: #7B1FA2; border-color: #E1BEE7; }
+        .tag.component-action:hover { background-color: #E1BEE7; }
+        .tag.component-action::after { content: "🧩"; font-size: 0.7rem; opacity: 0.5; }
+
+        .tag.intent-cat { background-color: #F5F5F5; color: #757575; border-color: #E0E0E0; font-size: 0.75rem; font-style: italic; }
+
+        /* Grupos de Intentos */
+        .intent-group { margin-bottom: 15px; border-left: 3px solid #ddd; padding-left: 10px; }
+        .intent-group-title { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        details { background: #263238; color: #ECEFF1; border-radius: 8px; overflow: hidden; margin-top: 20px; }
+        summary { padding: 12px; cursor: pointer; font-weight: 600; background: #37474F; list-style: none; user-select: none; }
+        summary::after { content: "+"; float: right; font-weight: bold; }
+        details[open] summary::after { content: "-"; }
+        .raw-content { padding: 15px; font-family: 'Consolas', monospace; font-size: 0.8rem; white-space: pre-wrap; word-break: break-all; max-height: 500px; overflow-y: auto; border-top: 1px solid #546E7A; }
+
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; background: #eee; }
+        .badge.connected { background: #C8E6C9; color: #2E7D32; }
+
+        /* --- TOAST NOTIFICATION --- */
+        #toast {
+            visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px;
+            padding: 12px; position: fixed; z-index: 2000; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 0.9rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.3s, bottom 0.3s;
+        }
+        #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
+
+        /* --- ARBOL DE ARCHIVOS --- */
+        .file-tree { font-family: 'Consolas', monospace; font-size: 0.85rem; padding: 10px; background: #FAFAFA; border-radius: 8px; border: 1px solid #EEE; }
+        .tree-node { margin-left: 20px; }
+        .tree-item { display: flex; align-items: center; padding: 4px 0; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+        .tree-item:hover { background: #E0E0E0; border-radius: 4px; }
+        .tree-icon { margin-right: 8px; width: 16px; text-align: center; flex-shrink: 0; }
+        .tree-name { flex-grow: 1; overflow: hidden; text-overflow: ellipsis; margin-right: 10px; }
+        
+        .tree-meta { display: flex; color: #999; font-size: 0.75rem; flex-shrink: 0; }
+        .meta-magic { width: 180px; text-align: right; overflow: hidden; text-overflow: ellipsis; margin-right: 15px; font-style: italic; color: var(--accent); background: #E0F2F1; padding: 0 5px; border-radius: 4px; display: inline-block; }
+        .meta-size { width: 80px; text-align: right; margin-right: 15px; font-family: monospace; }
+        .meta-date { width: 140px; text-align: right; font-family: monospace; }
+
+        .folder-content { display: none; margin-left: 10px; border-left: 1px solid #DDD; }
+        .folder-content.open { display: block; }
+        .error-text { color: var(--danger); font-style: italic; }
+
+        /* --- LOGCAT CONSOLE --- */
+        .log-console {
+            background: #111;
+            color: #0f0;
+            font-family: 'Consolas', monospace;
+            font-size: 0.8rem;
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin-top: 10px;
+            border: 1px solid #333;
+        }
+
+        /* --- MODAL --- */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); backdrop-filter: blur(2px); animation: fadeIn 0.3s; }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 0; border: 1px solid #888; width: 80%; max-width: 900px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 85vh; }
+        .modal-header { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #FAFAFA; border-radius: 12px 12px 0 0; }
+        .modal-title { font-weight: bold; color: var(--primary); font-size: 1.1rem; }
+        .close-btn { color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close-btn:hover { color: black; }
+        .tab-bar { display: flex; background: #eee; padding: 0 20px; gap: 10px; border-bottom: 1px solid #ddd; }
+        .tab { padding: 12px 20px; cursor: pointer; border-bottom: 3px solid transparent; font-weight: 600; color: var(--text-muted); }
+        .tab.active { border-bottom: 3px solid var(--accent); color: var(--accent); background: white; }
+        .modal-body { padding: 20px; overflow-y: auto; flex: 1; background: #fff; font-family: 'Consolas', monospace; font-size: 0.85rem; }
+        .file-content-view { white-space: pre-wrap; word-break: break-all; display: none; }
+        .file-content-view.active { display: block; }
+        .image-preview { max-width: 100%; height: auto; display: block; margin: 0 auto; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
+    </style>
+</head>
+<body>
+
+    <h1>Auditoría Móvil Holística</h1>
+    
+    <div class="container">
+        <!-- COLUMNA IZQUIERDA -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div class="card" id="connectionCard">
+                <h2>1. Conexión ADB</h2>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <button class="btn" onclick="fetchDevices()">Buscar Dispositivos</button>
+                    <span id="statusMsg" style="color: var(--accent); font-size: 0.8rem;"></span>
+                </div>
+                <ul id="deviceList" style="list-style: none; padding: 0; margin-top: 15px;"></ul>
+            </div>
+
+            <div class="card" id="packagesCard" style="opacity: 0.5; pointer-events: none; flex: 1;">
+                <h2>
+                    2. Paquetes (<span id="pkgCount">0</span>)
+                    <button class="btn btn-small" onclick="fetchPackages()">Recargar</button>
+                </h2>
+                <div class="controls">
+                    <input type="text" id="searchInput" placeholder="Filtrar por nombre..." onkeyup="filterPackages()">
+                    <select id="sortSelect" onchange="sortPackages()">
+                        <option value="date_new" selected>Más recientes</option>
+                        <option value="name_asc">Nombre A-Z</option>
+                        <option value="date_old">Más antiguos</option>
+                    </select>
+                </div>
+                <div class="scroll-area">
+                    <div id="packageList"><div style="padding:20px; text-align:center; color:#ccc;">Buscando dispositivos...</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMNA DERECHA -->
+        <div class="card" id="detailCard" style="opacity: 0.5;">
+            <h2>3. Resultados del Pentesting</h2>
+            
+            <div id="detailPlaceholder" style="padding: 40px; text-align: center; color: var(--text-muted);">
+                <div style="font-size: 3rem; margin-bottom: 10px;">🛡️</div>
+                Selecciona un paquete para analizar su postura de seguridad.
+            </div>
+
+            <div id="detailContent" style="display:none;">
+                <h3 id="detailTitle" style="margin-top:0; color:var(--primary); font-size: 1.5rem; margin-bottom: 20px;"></h3>
+                
+                <!-- SECCIÓN 1: SIGNOS VITALES -->
+                <div class="audit-section">
+                    <div class="audit-header">📊 Signos Vitales</div>
+                    <div class="data-grid">
+                        <div class="data-box"><span class="data-label">Versión</span><span class="data-value" id="valVersion">-</span></div>
+                        <div class="data-box"><span class="data-label">User ID (UID)</span><span class="data-value" id="valUid">-</span></div>
+                        <div class="data-box"><span class="data-label">Data Directory</span><span class="data-value" id="valDataDir" style="font-size:0.7rem;">-</span></div>
+                        <div class="data-box"><span class="data-label">Debuggable</span><span class="data-value" id="valDebug">-</span></div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 2: FILESYSTEM (MOVIDA AQUÍ) -->
+                <div class="audit-section">
+                    <div class="audit-header" style="justify-content: space-between;">
+                        <span>📂 Exploración de Archivos (Filesystem)</span>
+                        <select id="fileSort" onchange="onSortChange()" style="width:auto; font-size:0.8rem; padding:2px; border:1px solid #ccc; border-radius:4px;">
+                            <option value="name">Orden: Nombre (A-Z)</option>
+                            <option value="size">Orden: Tamaño</option>
+                            <option value="date">Orden: Fecha</option>
+                        </select>
+                    </div>
+                    <div class="file-tree" id="fileTreeRoot">
+                        <div style="color: #999; font-style: italic;">Selecciona un paquete...</div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 3: SCHEMES -->
+                <div class="audit-section">
+                    <div class="audit-header">🔗 Vectores de Entrada (Schemes)</div>
+                    <p style="font-size: 0.85rem; color: #666; margin: 5px 0;">
+                        Deep Links detectados. <br>
+                        <strong>Haz clic</strong> para copiar comando de prueba con datos (<code>-d scheme://</code>).
+                    </p>
+                    <div class="tag-container" id="containerSchemes"></div>
+                </div>
+
+                <!-- SECCIÓN 4: PERMISOS CONCEDIDOS -->
+                <div class="audit-section">
+                    <div class="audit-header" style="justify-content: space-between;">
+                        <span style="color: var(--success);">✅ Permisos Concedidos (Activos)</span>
+                        <span style="font-size:0.7rem; color:#666;">(⚠️ = Riesgo activo)</span>
+                    </div>
+                    <div class="tag-container" id="containerGranted"></div>
+                </div>
+
+                <!-- SECCIÓN 5: PERMISOS SOLICITADOS -->
+                <div class="audit-section">
+                    <div class="audit-header">👁️ Todos los Permisos Solicitados</div>
+                    <div class="tag-container" id="containerPerms"></div>
+                </div>
+
+                <!-- SECCIÓN 6: APP LINKS (MOVIDA AQUÍ) -->
+                <div class="audit-section">
+                    <div class="audit-header">🔗 Conexión Universal (App Links)</div>
+                    <p style="font-size: 0.85rem; color: #666; margin: 5px 0;">
+                        Estado de verificación de dominios (Android 12+). <br>
+                        <span style="color:#E65100; font-weight:bold;">1024</span> indica configuración incompleta (Legacy).
+                    </p>
+                    <div class="tag-container" id="containerAppLinks"></div>
+                </div>
+
+                <!-- SECCIÓN 7: PROVIDERS -->
+                <div class="audit-section">
+                    <div class="audit-header">📦 Content Providers (Datos)</div>
+                    <div style="font-size: 0.8rem; font-family: monospace; color: #455A64; background: #F5F5F5; padding: 10px; border-radius: 8px;">
+                        <ul id="listProviders" style="margin:0; padding-left: 20px;"></ul>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 8: INTENCIONES DETECTADAS -->
+                <div class="audit-section">
+                    <div class="audit-header">⚡ Intenciones Detectadas (Intents & Filters)</div>
+                    <p style="font-size: 0.85rem; color: #666; margin: 5px 0;">
+                        Acciones a las que reacciona la aplicación.<br>
+                        <strong>Haz clic</strong> para copiar el comando de acción genérica (<code>-a ...ACTION</code>) sin datos asociados.
+                    </p>
+                    <div style="margin-top: 10px;" id="containerIntentActions"></div>
+                    
+                    <div style="margin-top: 15px;">
+                        <span style="font-size: 0.8rem; font-weight: bold; color: var(--text-muted);">Categorías Contextuales:</span>
+                        <div class="tag-container" id="containerIntentCategories" style="margin-top:5px;"></div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 9: COMPONENTES EXPORTADOS -->
+                <div class="audit-section">
+                    <div class="audit-header">🧩 Componentes Públicos (Activities)</div>
+                    <p style="font-size: 0.85rem; color: #666; margin: 5px 0;">
+                        Componentes identificados por su nombre explícito.<br>
+                        <strong>Haz clic</strong> para invocar directamente (<code>-n package/.Component</code>).
+                    </p>
+                    <div class="tag-container" id="containerComponents"></div>
+                </div>
+                
+                <!-- SECCIÓN 10: LOGS -->
+                <div class="audit-section" id="logSection" style="display:none;">
+                    <div class="audit-header">📜 Registro de Eventos (Logcat)</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                        <span style="font-size:0.85rem; color:#666;" id="logFilterLabel">Filtro: -</span>
+                        <button class="btn btn-small" id="btnFetchLogs" onclick="fetchLogs()">Obtener Logs</button>
+                    </div>
+                    <div class="log-console" id="logConsole">Haga clic en 'Obtener Logs' para escuchar al sistema...</div>
+                </div>
+
+                <!-- SECCIÓN 11: RAW DATA -->
+                <details>
+                    <summary>Ver Datos Crudos (Dumpsys Raw)</summary>
+                    <div class="raw-content" id="detailText"></div>
+                </details>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div id="fileModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="modalFileName">Archivo</span>
+                <span class="close-btn" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="tab-bar">
+                <div class="tab active" id="tabRaw" onclick="switchTab('raw', this)">Materia (Raw)</div>
+                <div class="tab" id="tabStrings" onclick="switchTab('strings', this)">Esencia (Strings)</div>
+                <div class="tab" id="tabPreview" onclick="switchTab('preview', this)" style="display:none;">Vista Previa</div>
+            </div>
+            <div class="modal-body">
+                <div id="viewRaw" class="file-content-view active">Cargando...</div>
+                <div id="viewStrings" class="file-content-view"></div>
+                <div id="viewPreview" class="file-content-view"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- TOAST Notification -->
+    <div id="toast">Comando copiado</div>
+
+    <script>
+        const API_URL = ""; 
+        let currentDeviceId = null;
+        let allPackages = []; 
+        let currentUid = null;
+        let lastOpenedFolder = null; 
+
+        // Lista de permisos críticos ampliada para detectar riesgos activos
+        const DANGEROUS_PERMS = [
+            "READ_EXTERNAL_STORAGE", "WRITE_EXTERNAL_STORAGE", 
+            "CAMERA", "RECORD_AUDIO",
+            "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", 
+            "READ_CONTACTS", "WRITE_CONTACTS",
+            "READ_SMS", "SEND_SMS", "READ_CALL_LOG", 
+            "SYSTEM_ALERT_WINDOW", "GET_ACCOUNTS",
+            "FOREGROUND_SERVICE_MEDIA_PROJECTION",
+            "FOREGROUND_SERVICE_MICROPHONE",
+            "RECEIVE_BOOT_COMPLETED",
+            "ACCESS_ADSERVICES_AD_ID",
+            "AD_ID"
+        ];
+        
+        // --- AUTO-START ---
+        window.onload = function() {
+            fetchDevices();
+        };
+
+        async function fetchDevices() {
+            setStatus("Buscando...");
+            try {
+                const res = await fetch(`${API_URL}/devices`);
+                const data = await res.json();
+                const list = document.getElementById('deviceList');
+                list.innerHTML = '';
+                if(data.devices.length === 0) { setStatus("No se encontraron dispositivos."); return; }
+                setStatus("Dispositivos encontrados.");
+                data.devices.forEach(d => {
+                    const li = document.createElement('li');
+                    li.style.padding = "10px"; li.style.borderBottom = "1px solid #eee"; li.style.display = "flex"; li.style.justifyContent = "space-between";
+                    li.innerHTML = `<div><strong>${d.id}</strong> <span class="badge ${d.status === 'device' ? 'connected' : ''}">${d.status}</span></div><button class="btn btn-small" onclick="selectDevice('${d.id}')">Conectar</button>`;
+                    list.appendChild(li);
+                });
+
+                // Auto-conexión si hay un solo dispositivo
+                if (data.devices.length === 1) {
+                    selectDevice(data.devices[0].id);
+                    showToast(`Conectado automáticamente a ${data.devices[0].id}`);
+                }
+            } catch(e) { setStatus("Error de conexión con API."); }
+        }
+
+        async function selectDevice(id) {
+            currentDeviceId = id;
+            setStatus(`Conectado a: ${id}`);
+            document.getElementById('packagesCard').style.opacity = "1";
+            document.getElementById('packagesCard').style.pointerEvents = "auto";
+            document.getElementById('detailCard').style.opacity = "1";
+            fetchPackages();
+        }
+
+        async function fetchPackages() {
+            if(!currentDeviceId) return;
+            const listDiv = document.getElementById('packageList');
+            listDiv.innerHTML = '<div style="padding:20px; text-align:center;">Analizando sistema...</div>';
+            try {
+                const res = await fetch(`${API_URL}/packages/${currentDeviceId}`);
+                const data = await res.json();
+                allPackages = data.packages; 
+                document.getElementById('pkgCount').innerText = data.total_count;
+                sortPackages();
+            } catch(e) { listDiv.innerHTML = '<div style="color:red; padding:10px;">Error al obtener paquetes</div>'; }
+        }
+
+        function renderPackageList(packages) {
+            const listDiv = document.getElementById('packageList');
+            listDiv.innerHTML = '';
+            packages.forEach(pkg => {
+                const div = document.createElement('div');
+                div.className = 'package-item';
+                div.onclick = () => loadPackageDetails(pkg.name, div);
+                const hasInstall = (pkg.installTime && pkg.installTime !== "N/A" && pkg.installTime !== "-");
+                const hasUpdate = (pkg.updateTime && pkg.updateTime !== "N/A" && pkg.updateTime !== "-");
+                let dateInfo = hasInstall ? `<span class="pkg-date">Inst: ${pkg.installTime}</span>` : (hasUpdate ? `<span class="pkg-date">Act: ${pkg.updateTime}</span>` : `<span class="pkg-date" style="opacity:0.4; font-style:italic;">Sistema / RRO</span>`);
+                div.innerHTML = `<span class="pkg-name">${pkg.name}</span>${dateInfo}`;
+                listDiv.appendChild(div);
+            });
+        }
+
+        function filterPackages() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allPackages.filter(p => p.name.toLowerCase().includes(term));
+            renderPackageList(filtered);
+        }
+
+        function sortPackages() {
+            const criteria = document.getElementById('sortSelect').value;
+            let sorted = [...allPackages];
+            const parseDate = (d) => (!d || d === 'N/A' || d === '-') ? 0 : new Date(d).getTime();
+            if (criteria === 'name_asc') sorted.sort((a, b) => a.name.localeCompare(b.name));
+            else if (criteria === 'date_new') sorted.sort((a, b) => parseDate(b.installTime) - parseDate(a.installTime));
+            else if (criteria === 'date_old') sorted.sort((a, b) => parseDate(a.installTime) - parseDate(b.installTime));
+            renderPackageList(sorted);
+        }
+
+        async function loadPackageDetails(pkgName, element) {
+            document.querySelectorAll('.package-item').forEach(e => e.classList.remove('active'));
+            element.classList.add('active');
+            document.getElementById('detailPlaceholder').style.display = 'none';
+            document.getElementById('detailContent').style.display = 'block';
+            document.getElementById('detailTitle').innerText = pkgName;
+            
+            document.getElementById('valVersion').innerText = "...";
+            document.getElementById('containerPerms').innerHTML = "Analizando...";
+            document.getElementById('containerGranted').innerHTML = "Analizando...";
+            document.getElementById('detailText').innerText = "Cargando raw...";
+            document.getElementById('logSection').style.display = "none"; 
+            currentUid = null;
+            
+            initFileTree(pkgName);
+
+            try {
+                const res = await fetch(`${API_URL}/package/${currentDeviceId}/${pkgName}/details`);
+                const data = await res.json();
+                renderAnalysis(data.analysis, data.raw_info);
+                document.getElementById('detailText').innerText = data.raw_info; 
+            } catch(e) { document.getElementById('detailText').innerText = "Error obteniendo detalles."; }
+        }
+
+        function renderAnalysis(analysis, rawInfo) {
+            document.getElementById('valVersion').innerText = `${analysis.version_name} (${analysis.version_code})`;
+            document.getElementById('valUid').innerText = analysis.user_id;
+            document.getElementById('valDataDir').innerText = analysis.data_dir;
+            
+            const debugElem = document.getElementById('valDebug');
+            debugElem.innerText = analysis.is_debuggable ? "TRUE (RIESGO)" : "False";
+            debugElem.style.color = analysis.is_debuggable ? "red" : "green"; debugElem.style.fontWeight = "bold";
+
+            const schemeContainer = document.getElementById('containerSchemes');
+            schemeContainer.innerHTML = "";
+            if (analysis.schemes.length === 0) {
+                schemeContainer.innerHTML = "<span style='color:#999; font-style:italic;'>Ninguno detectado</span>";
+            } else {
+                analysis.schemes.forEach(s => {
+                    const span = document.createElement("span"); 
+                    span.className = "tag scheme-action"; 
+                    span.innerText = s;
+                    span.title = `Esquema: ${s}://\n(Haz clic para copiar comando de prueba con datos)`;
+                    span.onclick = () => copySchemeCommand(s);
+                    schemeContainer.appendChild(span);
+                });
+            }
+            
+            // --- NUEVO: APP LINKS ---
+            const appLinksContainer = document.getElementById('containerAppLinks');
+            appLinksContainer.innerHTML = "";
+            if (!analysis.app_links || analysis.app_links.length === 0) {
+                 appLinksContainer.innerHTML = "<span style='color:#999;'>No hay dominios asociados (App Links)</span>";
+            } else {
+                analysis.app_links.forEach(link => {
+                    const span = document.createElement("span");
+                    // Clases dinámicas según estado
+                    let className = "tag";
+                    if (link.status === "success") className += " granted";
+                    else if (link.status === "warning") className += " warning";
+                    else if (link.status === "danger") className += " danger";
+                    
+                    span.className = className;
+                    span.innerText = `${link.domain} (${link.code})`;
+                    span.title = link.description;
+                    appLinksContainer.appendChild(span);
+                });
+            }
+
+            const grantedContainer = document.getElementById('containerGranted');
+            grantedContainer.innerHTML = "";
+            if (!analysis.granted_permissions || analysis.granted_permissions.length === 0) {
+                 grantedContainer.innerHTML = "<span style='color:#999;'>Ninguno explícito detectado</span>";
+            } else {
+                analysis.granted_permissions.forEach(p => {
+                    const shortName = p.split(".").pop(); 
+                    const isDangerous = DANGEROUS_PERMS.some(dp => shortName.includes(dp));
+                    const span = document.createElement("span"); 
+                    if (isDangerous) {
+                        span.className = "tag danger-granted";
+                        span.innerText = "⚠️ " + shortName;
+                        span.title = "Permiso Crítico CONCEDIDO (Riesgo Activo)";
+                    } else {
+                        span.className = "tag granted";
+                        span.innerText = shortName;
+                    }
+                    grantedContainer.appendChild(span);
+                });
+            }
+
+            const permContainer = document.getElementById('containerPerms');
+            permContainer.innerHTML = "";
+            if (analysis.permissions.length === 0) permContainer.innerHTML = "<span style='color:#999;'>No solicita permisos explícitos</span>";
+            else analysis.permissions.forEach(p => {
+                const shortName = p.split(".").pop(); 
+                const isDangerous = DANGEROUS_PERMS.some(dp => shortName.includes(dp));
+                const span = document.createElement("span"); 
+                span.className = isDangerous ? "tag danger" : "tag"; 
+                span.innerText = shortName;
+                if(isDangerous) span.title = "Permiso Crítico Solicitado"; 
+                permContainer.appendChild(span);
+            });
+
+            const provList = document.getElementById('listProviders');
+            provList.innerHTML = "";
+            if(analysis.providers.length === 0) provList.innerHTML = "<li>Ninguno detectado</li>";
+            else analysis.providers.forEach(prov => { const li = document.createElement("li"); li.innerText = prov; provList.appendChild(li); });
+            
+            // --- INTENT ACTIONS ---
+            const intentActContainer = document.getElementById('containerIntentActions');
+            intentActContainer.innerHTML = "";
+            
+            if (!analysis.intent_actions || analysis.intent_actions.length === 0) {
+                intentActContainer.innerHTML = "<span style='color:#999;'>Ninguna acción explícita detectada</span>";
+            } else {
+                const groups = {
+                    "android": { title: "Sistema Android", items: [] },
+                    "androidx": { title: "Librerías (AndroidX/Jetpack)", items: [] },
+                    "google": { title: "Google / Firebase", items: [] },
+                    "other": { title: "Propias / Otras", items: [] }
+                };
+
+                analysis.intent_actions.forEach(a => {
+                    if (a.startsWith("android.")) groups["android"].items.push(a);
+                    else if (a.startsWith("androidx.")) groups["androidx"].items.push(a);
+                    else if (a.startsWith("com.google.") || a.startsWith("com.firebase.") || a.includes("google")) groups["google"].items.push(a);
+                    else groups["other"].items.push(a);
+                });
+
+                for (const key in groups) {
+                    const group = groups[key];
+                    if (group.items.length > 0) {
+                        const groupDiv = document.createElement("div");
+                        groupDiv.className = "intent-group";
+                        const title = document.createElement("div");
+                        title.className = "intent-group-title";
+                        title.innerText = group.title;
+                        groupDiv.appendChild(title);
+                        const tagsDiv = document.createElement("div");
+                        tagsDiv.className = "tag-container";
+                        group.items.forEach(a => {
+                            const shortAction = a.replace("android.intent.action.", "")
+                                                 .replace("android.app.action.", "")
+                                                 .replace("com.google.android.", "google.")
+                                                 .replace("androidx.profileinstaller.action.", "profile.");
+                            const span = document.createElement("span");
+                            span.className = "tag intent-action";
+                            span.innerText = shortAction;
+                            span.title = `Acción pura: ${a}\n(Haz clic para copiar comando ADB genérico sin datos)`;
+                            span.onclick = () => copyAdbCommand(a);
+                            tagsDiv.appendChild(span);
+                        });
+                        groupDiv.appendChild(tagsDiv);
+                        intentActContainer.appendChild(groupDiv);
+                    }
+                }
+            }
+
+            const intentCatContainer = document.getElementById('containerIntentCategories');
+            intentCatContainer.innerHTML = "";
+            if (!analysis.intent_categories || analysis.intent_categories.length === 0) {
+                intentCatContainer.innerHTML = "<span style='color:#999;'>Ninguna categoría explícita detectada</span>";
+            } else {
+                analysis.intent_categories.forEach(c => {
+                    const shortCat = c.replace("android.intent.category.", "");
+                    const span = document.createElement("span");
+                    span.className = "tag intent-cat";
+                    span.innerText = shortCat;
+                    span.title = c;
+                    intentCatContainer.appendChild(span);
+                });
+            }
+
+            const compContainer = document.getElementById('containerComponents');
+            compContainer.innerHTML = "";
+            
+            if (rawInfo) {
+                const foundComponents = new Set();
+                const regex = /[a-zA-Z0-9_.]+\/[a-zA-Z0-9_.$]+/g;
+                const matches = rawInfo.match(regex);
+                
+                if (matches) {
+                    matches.forEach(m => {
+                        if (m.includes(".") && !m.includes("filter") && !m.includes("Permission")) {
+                             foundComponents.add(m);
+                        }
+                    });
+                }
+                
+                if (foundComponents.size === 0) {
+                     compContainer.innerHTML = "<span style='color:#999; font-style:italic;'>No se identificaron componentes explícitos</span>";
+                } else {
+                    const sortedComps = Array.from(foundComponents).sort();
+                    sortedComps.forEach(comp => {
+                        const shortName = comp.split("/").pop(); 
+                        const span = document.createElement("span");
+                        span.className = "tag component-action";
+                        span.innerText = shortName;
+                        span.title = `Componente: ${comp}\n(Haz clic para invocar directamente con -n)`;
+                        span.onclick = () => copyComponentCommand(comp);
+                        compContainer.appendChild(span);
+                    });
+                }
+            } else {
+                 compContainer.innerHTML = "<span style='color:#999;'>Datos crudos no disponibles</span>";
+            }
+
+            if (analysis.user_id && analysis.user_id !== "Unknown") {
+                currentUid = analysis.user_id;
+                document.getElementById('logSection').style.display = "block";
+                document.getElementById('logFilterLabel').innerText = `Filtro (UID): ${currentUid}`;
+                document.getElementById('logConsole').innerText = "Haga clic en 'Obtener Logs' para escuchar al sistema...";
+            }
+        }
+
+        // --- FUNCIONES DE COMANDO ADB (CON PREFIJO DE WINDOWS Y DEVICE ID) ---
+        
+        function getAdbPrefix() {
+            // Detección simple para Windows, añade .\ si es necesario, y siempre añade el -s deviceId
+            const isWindows = navigator.userAgent.includes("Windows");
+            const adb = isWindows ? ".\\adb" : "adb";
+            return `${adb} -s ${currentDeviceId}`;
+        }
+
+        function copyAdbCommand(action) {
+            const prefix = getAdbPrefix();
+            let command = "";
+            if (action.includes("MAIN") || action.includes("VIEW") || action.includes("EDIT") || action.includes("INSERT")) {
+                command = `${prefix} shell am start -a ${action}`;
+            } else {
+                command = `${prefix} shell am broadcast -a ${action}`;
+            }
+            navigator.clipboard.writeText(command).then(() => { showToast(`Comando Puro copiado:\n${command}`); });
+        }
+        
+        function copySchemeCommand(scheme) {
+            const prefix = getAdbPrefix();
+            let uri = `${scheme}://`;
+            if (scheme === 'http' || scheme === 'https') { uri = `${scheme}://example.com`; }
+            const command = `${prefix} shell am start -a android.intent.action.VIEW -d "${uri}"`;
+            navigator.clipboard.writeText(command).then(() => { showToast(`Comando Deep Link copiado:\n${command}`); });
+        }
+
+        function copyComponentCommand(component) {
+            const prefix = getAdbPrefix();
+            const command = `${prefix} shell am start -n ${component}`;
+            navigator.clipboard.writeText(command).then(() => { showToast(`Comando Directo copiado:\n${command}`); });
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = "show";
+            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 4000);
+        }
+
+        async function fetchLogs() {
+            if (!currentUid) return;
+            const consoleDiv = document.getElementById('logConsole');
+            consoleDiv.innerText = "Sintonizando frecuencias del logcat...";
+            try {
+                const res = await fetch(`${API_URL}/logs/${currentDeviceId}?query=${currentUid}`);
+                const data = await res.json();
+                consoleDiv.innerText = data.logs || "--- Silencio: No se encontraron registros recientes ---";
+            } catch (e) {
+                consoleDiv.innerText = "Error al obtener logs.";
+            }
+        }
+
+        function initFileTree(pkgName) {
+            const root = document.getElementById('fileTreeRoot'); root.innerHTML = '';
+            lastOpenedFolder = null; 
+            createRootNode(root, `/`);
+            createRootNode(root, `/data/data/${pkgName}`);
+            createRootNode(root, `/data/user/0/${pkgName}`);
+        }
+
+        function createRootNode(container, path) {
+            const nodeDiv = document.createElement('div'); nodeDiv.className = 'tree-node'; nodeDiv.style.marginLeft = '0'; 
+            const itemDiv = document.createElement('div'); itemDiv.className = 'tree-item';
+            const iconSpan = document.createElement('span'); iconSpan.className = 'tree-icon'; iconSpan.innerText = '📁';
+            const textSpan = document.createElement('span'); textSpan.className = 'tree-name'; textSpan.innerText = path; textSpan.style.fontWeight = "bold";
+            itemDiv.appendChild(iconSpan); itemDiv.appendChild(textSpan);
+            const contentDiv = document.createElement('div'); contentDiv.className = 'folder-content';
+            itemDiv.onclick = () => toggleFolder(path, contentDiv, iconSpan);
+            nodeDiv.appendChild(itemDiv); nodeDiv.appendChild(contentDiv); container.appendChild(nodeDiv);
+        }
+
+        async function toggleFolder(path, contentDiv, iconSpan) {
+            if (contentDiv.style.display === 'block') { 
+                contentDiv.style.display = 'none'; 
+                iconSpan.innerText = '📁'; 
+            } else { 
+                contentDiv.style.display = 'block'; 
+                iconSpan.innerText = '📂'; 
+                contentDiv.innerHTML = '<div style="margin-left:20px; color:#999;">Renovando...</div>'; 
+                await loadFiles(path, contentDiv); 
+            }
+        }
+
+        function sortFilesData(files, criteria) {
+            const dirs = files.filter(f => f.type === 'dir');
+            const nonDirs = files.filter(f => f.type !== 'dir');
+
+            const sorter = (a, b) => {
+                if (criteria === 'name') return a.name.localeCompare(b.name);
+                if (criteria === 'size') return (parseInt(b.size) || 0) - (parseInt(a.size) || 0); 
+                if (criteria === 'date') return new Date(b.date) - new Date(a.date); 
+                return 0;
+            };
+
+            dirs.sort(sorter);
+            nonDirs.sort(sorter);
+
+            return [...dirs, ...nonDirs];
+        }
+
+        async function loadFiles(path, container) {
+            lastOpenedFolder = { path, container };
+
+            try {
+                const res = await fetch(`${API_URL}/files/${currentDeviceId}?path=${encodeURIComponent(path)}`);
+                const data = await res.json();
+                container.innerHTML = ''; 
+                if (data.error) { container.innerHTML = `<div style="margin-left:20px;" class="error-text">Error: ${data.error}</div>`; return; }
+                if (data.files.length === 0) { container.innerHTML = '<div style="margin-left:20px; color:#999; font-style:italic;">(Vacío)</div>'; return; }
+                
+                const criteria = document.getElementById('fileSort').value;
+                const sortedFiles = sortFilesData(data.files, criteria);
+
+                sortedFiles.forEach(f => {
+                    const nodeDiv = document.createElement('div'); nodeDiv.className = 'tree-node';
+                    const itemDiv = document.createElement('div'); itemDiv.className = 'tree-item';
+                    
+                    const isImage = f.magic && f.magic.toLowerCase().includes('image');
+                    const iconSpan = document.createElement('span'); iconSpan.className = 'tree-icon'; 
+                    
+                    if (f.type === 'dir') iconSpan.innerText = '📁';
+                    else if (isImage) iconSpan.innerText = '🖼️';
+                    else if (f.type === 'link') iconSpan.innerText = '🔗';
+                    else iconSpan.innerText = '📄';
+                    
+                    const textSpan = document.createElement('span'); textSpan.className = 'tree-name'; textSpan.innerText = f.name;
+                    
+                    const metaSpan = document.createElement('span'); metaSpan.className = 'tree-meta'; 
+                    let magicText = f.magic || "-";
+                    if (magicText.length > 25) magicText = magicText.substring(0, 22) + '...';
+                    
+                    metaSpan.innerHTML = `
+                        <span class="meta-magic" title="${f.magic || ''}">${magicText}</span>
+                        <span class="meta-size">${f.size}</span>
+                        <span class="meta-date">${f.date}</span>
+                    `;
+                    
+                    itemDiv.appendChild(iconSpan); itemDiv.appendChild(textSpan); itemDiv.appendChild(metaSpan);
+                    const subContentDiv = document.createElement('div'); subContentDiv.className = 'folder-content';
+                    
+                    if (f.type === 'dir') { 
+                        const newPath = path.endsWith('/') ? path + f.name : path + '/' + f.name; 
+                        itemDiv.onclick = () => toggleFolder(newPath, subContentDiv, iconSpan); 
+                    } 
+                    else if (f.type === 'file') { 
+                        const filePath = path.endsWith('/') ? path + f.name : path + '/' + f.name; 
+                        itemDiv.onclick = () => openFileViewer(filePath, isImage); 
+                        itemDiv.style.color = "#00796B"; 
+                    }
+                    nodeDiv.appendChild(itemDiv); if (f.type === 'dir') nodeDiv.appendChild(subContentDiv); container.appendChild(nodeDiv);
+                });
+            } catch(e) { container.innerHTML = `<div style="margin-left:20px; color:red;">Error de conexión</div>`; }
+        }
+
+        function onSortChange() {
+            if (lastOpenedFolder && lastOpenedFolder.container.style.display === 'block') {
+                loadFiles(lastOpenedFolder.path, lastOpenedFolder.container);
+            }
+        }
+
+        async function openFileViewer(path, isImage) {
+            const modal = document.getElementById('fileModal');
+            document.getElementById('modalFileName').innerText = path;
+            document.getElementById('viewRaw').innerHTML = "Cargando materia...";
+            document.getElementById('viewStrings').innerHTML = "Extrayendo esencia...";
+            document.getElementById('viewPreview').innerHTML = "Cargando imagen...";
+            
+            const tabPreview = document.getElementById('tabPreview');
+            const tabRaw = document.getElementById('tabRaw');
+            
+            if (isImage) {
+                tabPreview.style.display = "block";
+                tabRaw.innerHTML = "Base64 (Raw)";
+                switchTab('preview', tabPreview); 
+            } else {
+                tabPreview.style.display = "none";
+                tabRaw.innerHTML = "Materia (Raw)";
+                switchTab('raw', tabRaw);
+            }
+
+            modal.style.display = "block";
+            
+            try {
+                const res = await fetch(`${API_URL}/files/${currentDeviceId}/read?path=${encodeURIComponent(path)}`);
+                const data = await res.json();
+                
+                if (isImage && data.base64) {
+                    document.getElementById('viewRaw').innerText = data.base64.substring(0, 500) + "\n... (Base64 truncado para visualización)";
+                    document.getElementById('viewPreview').innerHTML = `<img src="data:image/png;base64,${data.base64}" class="image-preview" alt="Vista Previa">`;
+                } else {
+                    document.getElementById('viewRaw').innerText = data.content || "(Vacío)";
+                    document.getElementById('viewPreview').innerHTML = "";
+                }
+                
+                const stringsDiv = document.getElementById('viewStrings');
+                if (!data.strings || data.strings.length === 0) stringsDiv.innerHTML = "<div style='color:#999; padding:20px; text-align:center;'>No se detectaron cadenas legibles importantes.</div>";
+                else stringsDiv.innerHTML = data.strings.map(s => `<div style="border-bottom:1px solid #eee; padding:2px 0;">${escapeHtml(s)}</div>`).join('');
+                
+            } catch (e) { document.getElementById('viewRaw').innerHTML = `<div class="error-text">Error al leer el archivo: ${e.message}</div>`; }
+        }
+
+        function closeModal() { document.getElementById('fileModal').style.display = "none"; }
+        function switchTab(tabName, tabElement) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); tabElement.classList.add('active');
+            document.querySelectorAll('.file-content-view').forEach(v => v.classList.remove('active'));
+            if (tabName === 'raw') document.getElementById('viewRaw').classList.add('active');
+            else if (tabName === 'strings') document.getElementById('viewStrings').classList.add('active');
+            else if (tabName === 'preview') document.getElementById('viewPreview').classList.add('active');
+        }
+        window.onclick = function(event) { if (event.target == document.getElementById('fileModal')) closeModal(); }
+        function escapeHtml(text) { if (!text) return text; return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
+        function setStatus(msg) { document.getElementById('statusMsg').innerText = msg; }
+    </script>
+</body>
+</html>
