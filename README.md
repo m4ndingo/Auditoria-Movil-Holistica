@@ -66,7 +66,7 @@ Sintonización automática de los logs filtrados específicamente por el `UID` d
 
 1.  **Clonar el repositorio:**
     ```bash
-    git clone [https://github.com/tu-usuario/auditoria-movil-consciente.git](https://github.com/tu-usuario/auditoria-movil-consciente.git)
+    git clone https://github.com/m4ndingo/Auditoria-Movil-Holistica.git
     cd auditoria-movil-consciente
     ```
 
