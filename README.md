@@ -5,7 +5,6 @@
 Una herramienta de pentesting y análisis estático/dinámico para Android que busca el equilibrio (*Sattva*) entre la profundidad técnica y la claridad visual. Utiliza ADB para extraer la esencia (`dumpsys`, `logcat`, sistema de archivos) y presentarla en un Canvas unificado que facilita la comprensión de la postura de seguridad de una aplicación.
 
 ![Captura de Pantalla: Vista General del Dashboard](assets/screenshot_main.png)
-*(Etiqueta para tu captura: Vista general mostrando la lista de dispositivos y paquetes)*
 
 ## 🌟 Filosofía del Proyecto
 
@@ -32,7 +31,6 @@ Navegación consciente por el sistema de archivos de la app (`/data/data/...`):
 * Identificación de tipos de archivo (Magic numbers).
 
 ![Captura de Pantalla: Explorador de Archivos](assets/screenshot_files.png)
-*(Etiqueta para tu captura: Modal mostrando el contenido de un archivo o el árbol de directorios)*
 
 ### 3. 🛡️ Permisos y Fronteras
 Análisis del consentimiento y los límites:
@@ -94,7 +92,6 @@ Sintonización automática de los logs filtrados específicamente por el `UID` d
 4.  **Interactúa:** Haz clic en los esquemas, acciones o componentes para copiar los comandos de prueba.
 
 ![Captura de Pantalla: Detalles de Análisis](assets/screenshot_details.png)
-*(Etiqueta para tu captura: Panel de detalles mostrando intents y permisos)*
 
 ## 🤝 Contribuciones (Karma Yoga)
 
